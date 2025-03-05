@@ -5,36 +5,24 @@ import pdfplumber
 import docx2txt
 import numpy as np
 import matplotlib.pyplot as plt
-import nltk
-import os
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk import ne_chunk, pos_tag
+import spacy
 from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import re
 
-# Download required NLTK resources if not present
-nltk_resources = ["punkt", "averaged_perceptron_tagger", "maxent_ne_chunker", "words", "stopwords"]
-for resource in nltk_resources:
-    try:
-        nltk.data.find(f"corpora/{resource}")  # Adjusted corpus path
-    except LookupError:
-        nltk.download(resource)
+# Load spaCy model
+nlp = spacy.load("en_core_web_sm")
+
+# Predefined list of technical skills for extraction
+TECH_SKILLS = {"machine learning", "deep learning", "data science", "python", "sql", "tensorflow", "keras", "nlp", "power bi", "tableau", "pandas", "numpy", "big data", "AI", "cloud computing", "docker", "kubernetes", "flask", "django", "fastapi", "data visualization"}
 
 # Load AI Model
 st_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # YouTube API Key (Use a secure way to store API keys)
-YOUTUBE_API_KEY = os.getenv("AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI")  # Use environment variables
+YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")  # Use environment variables
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-
-# Initialize session state
-if "skills_analyzed" not in st.session_state:
-    st.session_state.skills_analyzed = False
-    st.session_state.missing_skills = []
-    st.session_state.matching_score = 0.0
 
 # Function to extract text from files
 def extract_text(uploaded_file):
@@ -51,29 +39,25 @@ def extract_text(uploaded_file):
             st.error("Unsupported file format! Please upload PDF, DOCX, or TXT.")
     return ""
 
-# Skill Extraction Function
+# Alternative Skill Extraction Function using spaCy
 def extract_skills(text):
     if not text:
         return []
-
-    words = word_tokenize(text)
-    words = [word for word in words if word.isalpha() and word.lower() not in stopwords.words("english")]
-    tagged_words = pos_tag(words)
-    named_entities = ne_chunk(tagged_words, binary=False)
-
-    skills = []
-    for chunk in named_entities:
-        if hasattr(chunk, "label") and chunk.label() in ["GPE", "ORG", "PERSON", "FACILITY", "PRODUCT"]:
-            skills.append(" ".join(c[0] for c in chunk))
-
-    # Extend predefined skill extraction
-    skill_pattern = re.compile(
-        r"\b(machine learning|deep learning|data science|python|sql|tensorflow|keras|nlp|power bi|tableau|pandas|numpy|big data|AI|cloud computing|docker|kubernetes|flask|django|fastapi|data visualization)\b",
-        re.IGNORECASE,
-    )
-    skills.extend(skill_pattern.findall(text))
-
-    return list(set(skills))
+    
+    doc = nlp(text)
+    extracted_skills = set()
+    
+    # Extract entities using spaCy's NER
+    for ent in doc.ents:
+        if ent.label_ in ["ORG", "PRODUCT", "GPE"]:  # Common labels for skills
+            extracted_skills.add(ent.text.lower())
+    
+    # Match words from predefined skills database
+    for token in doc:
+        if token.text.lower() in TECH_SKILLS:
+            extracted_skills.add(token.text.lower())
+    
+    return list(extracted_skills)
 
 # Function to calculate similarity score
 def calculate_matching_score(resume_text, job_text):
@@ -149,16 +133,13 @@ if resume_file and job_file:
         job_skills = extract_skills(job_text)
         missing_skills = list(set(job_skills) - set(resume_skills))
 
-        st.session_state.skills_analyzed = True
-        st.session_state.missing_skills = missing_skills
-        st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
-
         st.subheader("🔍 Extracted Skills")
         st.write(f"**Resume Skills:** {', '.join(resume_skills)}")
         st.write(f"**Job Required Skills:** {', '.join(job_skills)}")
 
         st.subheader("📊 Resume Matching Score")
-        st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
+        match_score = calculate_matching_score(resume_text, job_text)
+        st.write(f"Your resume matches **{match_score}%** of the job requirements.")
 
         st.subheader("⚠️ Missing Skills")
         if missing_skills:
@@ -168,14 +149,13 @@ if resume_file and job_file:
 
         plot_skill_comparison(resume_skills, job_skills)
 
-if st.session_state.skills_analyzed and st.session_state.missing_skills:
-    if st.button("📚 Get Recommended Courses"):
-        all_courses = []
-        for skill in st.session_state.missing_skills:
-            all_courses.extend(fetch_youtube_courses(skill))
-        
-        if all_courses:
-            df = pd.DataFrame(all_courses)
-            st.table(df)
-        else:
-            st.error("No courses found.")
+if st.button("📚 Get Recommended Courses"):
+    all_courses = []
+    for skill in missing_skills:
+        all_courses.extend(fetch_youtube_courses(skill))
+    
+    if all_courses:
+        df = pd.DataFrame(all_courses)
+        st.table(df)
+    else:
+        st.error("No courses found.")
