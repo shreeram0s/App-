@@ -18,5 +18,6 @@ beautifulsoup4  # Optional: For additional text processing
 unidecode       # Optional: For normalizing text
 
 # Ensure spaCy model is available
+spacy[en_core_web_sm]
 spacy-lookups-data
 
