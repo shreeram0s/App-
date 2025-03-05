@@ -6,33 +6,27 @@ import docx2txt
 import numpy as np
 import matplotlib.pyplot as plt
 import nltk
+import asyncio
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk import ne_chunk, pos_tag
 from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import re
-import asyncio
-
-# Handle event loop issue
-try:
-    import nest_asyncio
-    nest_asyncio.apply()
-except ImportError:
-    pass
 
 # Download required NLTK resources
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
-nltk.download('stopwords')
+nltk_resources = ["punkt", "averaged_perceptron_tagger", "maxent_ne_chunker", "words", "stopwords"]
+for resource in nltk_resources:
+    try:
+        nltk.data.find(f"tokenizers/{resource}")
+    except LookupError:
+        nltk.download(resource)
 
-# Load AI Model for text similarity
-st_model = SentenceTransformer('all-MiniLM-L6-v2')
+# Load AI Model
+st_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# YouTube API Key (Replace with your actual key)
-YOUTUBE_API_KEY = "YOUR_YOUTUBE_API_KEY_HERE"
+# YouTube API Key (Use a secure way to store API keys)
+YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"  
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
@@ -57,23 +51,25 @@ def extract_text(uploaded_file):
             st.error("Unsupported file format! Please upload PDF, DOCX, or TXT.")
     return ""
 
-# Function to extract skills from text
+# Advanced Skill Extraction Function
 def extract_skills(text):
     words = word_tokenize(text)
-    words = [word.lower() for word in words if word.isalpha() and word.lower() not in stopwords.words('english')]
+    words = [word for word in words if word.isalpha() and word.lower() not in stopwords.words("english")]
     tagged_words = pos_tag(words)
-    
-    # Extract named entities
     named_entities = ne_chunk(tagged_words, binary=False)
+
     skills = []
     for chunk in named_entities:
-        if hasattr(chunk, 'label') and chunk.label() in ["GPE", "ORG", "PERSON", "FACILITY", "PRODUCT"]:
+        if hasattr(chunk, "label") and chunk.label() in ["GPE", "ORG", "PERSON", "FACILITY", "PRODUCT"]:
             skills.append(" ".join(c[0] for c in chunk))
 
     # Extract skills using regex patterns
-    skill_pattern = re.compile(r'\b(machine learning|deep learning|data science|python|sql|tensorflow|keras|nlp|power bi|tableau|pandas|numpy|ai|analytics|business intelligence|big data)\b', re.IGNORECASE)
+    skill_pattern = re.compile(
+        r"\b(machine learning|deep learning|data science|python|sql|tensorflow|keras|nlp|power bi|tableau|pandas|numpy)\b",
+        re.IGNORECASE,
+    )
     skills.extend(skill_pattern.findall(text))
-    
+
     return list(set(skills))
 
 # Function to calculate similarity score
@@ -86,34 +82,36 @@ def plot_skill_comparison(resume_skills, job_skills):
     all_skills = list(set(resume_skills + job_skills))
     resume_counts = [1 if skill in resume_skills else 0 for skill in all_skills]
     job_counts = [1 if skill in job_skills else 0 for skill in all_skills]
-    
+
     df = pd.DataFrame({"Skills": all_skills, "Resume": resume_counts, "Job Requirements": job_counts})
-    df.set_index("Skills").plot(kind="bar", figsize=(10, 5), color=["blue", "red"], alpha=0.7)
-    plt.title("Resume vs. Job Skills Comparison")
-    plt.xticks(rotation=45)
-    plt.ylabel("Presence (1 = Present, 0 = Missing)")
-    st.pyplot(plt)
+    
+    fig, ax = plt.subplots(figsize=(8, 4))
+    df.set_index("Skills").plot(kind="bar", ax=ax, color=["blue", "red"], alpha=0.7)
+    ax.set_title("Resume vs. Job Skills Comparison")
+    ax.set_xticklabels(df["Skills"], rotation=45)
+    ax.set_ylabel("Presence (1 = Present, 0 = Missing)")
+    st.pyplot(fig)
 
-# Function to fetch YouTube courses
+# Function to fetch YouTube course recommendations
 def fetch_youtube_courses(skill):
-    youtube = googleapiclient.discovery.build(
-        YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=YOUTUBE_API_KEY
-    )
+    youtube = googleapiclient.discovery.build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=YOUTUBE_API_KEY)
+    
     request = youtube.search().list(
-        q=f"{skill} course",
+        q=f"{skill} tutorial",
         part="snippet",
-        maxResults=5,
-        type="video"
+        type="video",
+        maxResults=3
     )
+    
     response = request.execute()
-
+    
     courses = []
     for item in response.get("items", []):
-        title = item["snippet"]["title"]
         video_id = item["id"]["videoId"]
+        title = item["snippet"]["title"]
         url = f"https://www.youtube.com/watch?v={video_id}"
-        courses.append({"Skill": skill, "Course": title, "URL": url})
-
+        courses.append({"Skill": skill, "Course Title": title, "Link": url})
+    
     return courses
 
 # Streamlit UI
@@ -127,7 +125,7 @@ job_file = st.file_uploader("📄 Upload Job Description (PDF, DOCX, TXT)", type
 if resume_file and job_file:
     resume_text = extract_text(resume_file)
     job_text = extract_text(job_file)
-    
+
     st.subheader("📌 Resume Summary")
     st.write(resume_text[:500] + "...")
 
@@ -163,6 +161,9 @@ if st.session_state.skills_analyzed and st.session_state.missing_skills:
         all_courses = []
         for skill in st.session_state.missing_skills:
             all_courses.extend(fetch_youtube_courses(skill))
-
-        df = pd.DataFrame(all_courses)
-        st.table(df if not df.empty else "No courses found.")
+        
+        if all_courses:
+            df = pd.DataFrame(all_courses)
+            st.table(df)
+        else:
+            st.error("No courses found.")
