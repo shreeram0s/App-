@@ -1,1 +1,22 @@
+# Core dependencies
+streamlit
+requests
+pandas
+numpy
+matplotlib
+pdfplumber
+docx2txt
+sentence-transformers
+torch
+google-api-python-client
+
+# NLP Libraries for Skill Extraction
+nltk
+spacy
+scikit-learn
+beautifulsoup4  # Optional: For additional text processing
+unidecode       # Optional: For normalizing text
+
+# Ensure spaCy model is available
+spacy-lookups-data
 
