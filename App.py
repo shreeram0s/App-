@@ -12,6 +12,22 @@ from sentence_transformers import SentenceTransformer, util
 import os
 import subprocess
 import torch
+import spacy
+import subprocess
+import streamlit as st
+from sentence_transformers import SentenceTransformer
+
+# Ensure spaCy model is available
+model_name = "en_core_web_sm"
+try:
+    nlp = spacy.load(model_name)
+except OSError:
+    st.warning(f"Downloading {model_name}...")
+    subprocess.run(["python", "-m", "spacy", "download", model_name])
+    nlp = spacy.load(model_name)  # Reload after downloading
+
+# Load AI Model
+st_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 if not torch.cuda.is_available():
     print("Running on CPU (no CUDA detected)")
