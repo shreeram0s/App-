@@ -6,7 +6,7 @@ import docx2txt
 import numpy as np
 import matplotlib.pyplot as plt
 import nltk
-import asyncio
+import os
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk import ne_chunk, pos_tag
@@ -14,11 +14,11 @@ from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import re
 
-# Download required NLTK resources
+# Download required NLTK resources if not present
 nltk_resources = ["punkt", "averaged_perceptron_tagger", "maxent_ne_chunker", "words", "stopwords"]
 for resource in nltk_resources:
     try:
-        nltk.data.find(f"tokenizers/{resource}")
+        nltk.data.find(f"corpora/{resource}")  # Adjusted corpus path
     except LookupError:
         nltk.download(resource)
 
@@ -26,7 +26,7 @@ for resource in nltk_resources:
 st_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # YouTube API Key (Use a secure way to store API keys)
-YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"  
+YOUTUBE_API_KEY = os.getenv("AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI")  # Use environment variables
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
@@ -51,8 +51,11 @@ def extract_text(uploaded_file):
             st.error("Unsupported file format! Please upload PDF, DOCX, or TXT.")
     return ""
 
-# Advanced Skill Extraction Function
+# Skill Extraction Function
 def extract_skills(text):
+    if not text:
+        return []
+
     words = word_tokenize(text)
     words = [word for word in words if word.isalpha() and word.lower() not in stopwords.words("english")]
     tagged_words = pos_tag(words)
@@ -63,9 +66,9 @@ def extract_skills(text):
         if hasattr(chunk, "label") and chunk.label() in ["GPE", "ORG", "PERSON", "FACILITY", "PRODUCT"]:
             skills.append(" ".join(c[0] for c in chunk))
 
-    # Extract skills using regex patterns
+    # Extend predefined skill extraction
     skill_pattern = re.compile(
-        r"\b(machine learning|deep learning|data science|python|sql|tensorflow|keras|nlp|power bi|tableau|pandas|numpy)\b",
+        r"\b(machine learning|deep learning|data science|python|sql|tensorflow|keras|nlp|power bi|tableau|pandas|numpy|big data|AI|cloud computing|docker|kubernetes|flask|django|fastapi|data visualization)\b",
         re.IGNORECASE,
     )
     skills.extend(skill_pattern.findall(text))
@@ -74,11 +77,16 @@ def extract_skills(text):
 
 # Function to calculate similarity score
 def calculate_matching_score(resume_text, job_text):
+    if not resume_text or not job_text:
+        return 0.0
     embeddings = st_model.encode([resume_text, job_text], convert_to_tensor=True)
     return round(float(util.pytorch_cos_sim(embeddings[0], embeddings[1])[0]), 2) * 100
 
 # Function to plot skill comparison
 def plot_skill_comparison(resume_skills, job_skills):
+    if not resume_skills and not job_skills:
+        return
+    
     all_skills = list(set(resume_skills + job_skills))
     resume_counts = [1 if skill in resume_skills else 0 for skill in all_skills]
     job_counts = [1 if skill in job_skills else 0 for skill in all_skills]
@@ -86,14 +94,18 @@ def plot_skill_comparison(resume_skills, job_skills):
     df = pd.DataFrame({"Skills": all_skills, "Resume": resume_counts, "Job Requirements": job_counts})
     
     fig, ax = plt.subplots(figsize=(8, 4))
-    df.set_index("Skills").plot(kind="bar", ax=ax, color=["blue", "red"], alpha=0.7)
+    df.plot(kind="bar", x="Skills", ax=ax, color=["blue", "red"], alpha=0.7)
     ax.set_title("Resume vs. Job Skills Comparison")
-    ax.set_xticklabels(df["Skills"], rotation=45)
+    ax.set_xticklabels(df["Skills"], rotation=45, ha="right")
     ax.set_ylabel("Presence (1 = Present, 0 = Missing)")
     st.pyplot(fig)
 
 # Function to fetch YouTube course recommendations
 def fetch_youtube_courses(skill):
+    if not YOUTUBE_API_KEY:
+        st.error("YouTube API Key not found!")
+        return []
+
     youtube = googleapiclient.discovery.build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=YOUTUBE_API_KEY)
     
     request = youtube.search().list(
