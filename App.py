@@ -11,6 +11,10 @@ import re
 from sentence_transformers import SentenceTransformer, util
 import os
 import subprocess
+import torch
+
+if not torch.cuda.is_available():
+    print("Running on CPU (no CUDA detected)")
 
 # Ensure spaCy model is available
 model_name = "en_core_web_sm"
