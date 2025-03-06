@@ -8,20 +8,12 @@ import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import spacy
-from spacy.cli import download
-
-# Download the model if it's not already installed
-try:
-    nlp = spacy.load("en_core_web_md")
-except IOError:
-    download("en_core_web_md")
-    nlp = spacy.load("en_core_web_md")
-
-# Load spaCy model for NER
-nlp = spacy.load("en_core_web_md")
 
 # Load AI Model
 st_model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Load spaCy model for NER
+nlp = spacy.load("en_core_web_md")
 
 # YouTube API Key (Replace with a new secured key)
 YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"
@@ -84,30 +76,13 @@ def plot_skill_comparison(resume_skills, job_skills):
     all_skills = list(set(resume_skills + job_skills))
     resume_counts = [1 if skill in resume_skills else 0 for skill in all_skills]
     job_counts = [1 if skill in job_skills else 0 for skill in all_skills]
-
-    # Number of variables
-    num_vars = len(all_skills)
-
-    # Create radar chart
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
     
-    # The plot is a circle, so we need to "complete the loop" and append the start to the end.
-    resume_counts += resume_counts[:1]
-    job_counts += job_counts[:1]
-    angles += angles[:1]
-
-    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
-    
-    ax.fill(angles, resume_counts, color='blue', alpha=0.25, label='Resume Skills')
-    ax.fill(angles, job_counts, color='red', alpha=0.25, label='Job Requirements')
-    
-    ax.set_yticklabels([])
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(all_skills)
-    ax.set_title("Resume vs. Job Skills Comparison", size=15, color='black', weight='bold')
-    ax.legend(loc='upper right', bbox_to_anchor=(0.1, 0.1))
-
-    st.pyplot(fig)
+    df = pd.DataFrame({"Skills": all_skills, "Resume": resume_counts, "Job Requirements": job_counts})
+    df.set_index("Skills").plot(kind="bar", figsize=(8, 4), color=["blue", "red"], alpha=0.7)
+    plt.title("Resume vs. Job Skills Comparison")
+    plt.xticks(rotation=45)
+    plt.ylabel("Presence (1 = Present, 0 = Missing)")
+    st.pyplot(plt)
 
 # Streamlit UI
 st.title("📄 AI Resume Analyzer & Skill Enhancer")
