@@ -1,17 +1,13 @@
 streamlit
-torch
 transformers
 sentence-transformers
 huggingface-hub
 spacy
-https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
 pdfplumber
 docx2txt
 google-api-python-client
 numpy
 matplotlib
-torchvision
-torchaudio
 python-dotenv
 requests
 pandas
@@ -19,5 +15,6 @@ nltk
 scikit-learn
 beautifulsoup4
 unidecode
-spacy[en_core_web_md]
 spacy-lookups-data
+# Install Spacy model manually if needed:
+https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
