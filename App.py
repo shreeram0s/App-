@@ -83,18 +83,41 @@ def calculate_matching_score(resume_text, job_text):
     return round(float(util.pytorch_cos_sim(embeddings[0], embeddings[1])[0]), 2) * 100
 
 # Function to plot skill comparison
-def plot_skill_comparison(resume_skills, job_skills):
-    all_skills = list(set(resume_skills + job_skills))
-    resume_counts = [1 if skill in resume_skills else 0 for skill in all_skills]
-    job_counts = [1 if skill in job_skills else 0 for skill in all_skills]
-    
-    df = pd.DataFrame({"Skills": all_skills, "Resume": resume_counts, "Job Requirements": job_counts})
-    df.set_index("Skills").plot(kind="bar", figsize=(8, 4), color=["blue", "red"], alpha=0.7)
-    plt.title("Resume vs. Job Skills Comparison")
-    plt.xticks(rotation=45)
-    plt.ylabel("Presence (1 = Present, 0 = Missing)")
-    st.pyplot(plt)
-    plt.close()
+def plot_skill_comparison_pie(resume_skills, job_skills):
+    """
+    Plots two pie charts:
+    - One for skills found in the resume
+    - One for skills required in the job description
+    """
+    # Convert skill lists to sets for comparison
+    resume_skills_set = set(resume_skills)
+    job_skills_set = set(job_skills)
+
+    # Identify missing skills (in job description but not in resume)
+    missing_skills = job_skills_set - resume_skills_set
+    present_skills = resume_skills_set.intersection(job_skills_set)
+
+    # Prepare labels and counts for pie charts
+    resume_labels = ["Present Skills", "Missing Skills"]
+    resume_sizes = [len(present_skills), len(missing_skills)]
+
+    job_labels = ["Required Skills"]
+    job_sizes = [len(job_skills_set)]
+
+    # Plot the pie charts
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+    # Resume Skills Pie Chart
+    axes[0].pie(resume_sizes, labels=resume_labels, autopct='%1.1f%%', colors=['green', 'red'], startangle=90)
+    axes[0].set_title("Skills in Resume")
+
+    # Job Requirement Pie Chart
+    axes[1].pie(job_sizes, labels=job_labels, autopct='%1.1f%%', colors=['blue'], startangle=90)
+    axes[1].set_title("Skills Required for Job")
+
+    # Show the chart
+    plt.tight_layout()
+    plt.show()
 
 # Streamlit UI
 st.title("📄 AI Resume Analyzer & Skill Enhancer")
