@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import requests
 import pandas as pd
 import pdfplumber
@@ -84,39 +84,23 @@ def calculate_matching_score(resume_text, job_text):
 
 # Function to plot skill comparison
 def plot_skill_distribution_pie(resume_skills, job_skills):
-    """
-    Plots two separate pie charts:
-    - One showing the distribution of skills in the resume.
-    - One showing the distribution of job-required skills.
-    """
-    # Prepare data for Resume Skills pie chart
     resume_labels = list(resume_skills) if resume_skills else ["No Skills Found"]
     resume_sizes = [1] * len(resume_skills) if resume_skills else [1]
     
-    # Prepare data for Job Skills pie chart
     job_labels = list(job_skills) if job_skills else ["No Skills Found"]
     job_sizes = [1] * len(job_skills) if job_skills else [1]
 
-    # Plot pie charts
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
-
-    # Resume Skills Pie Chart
     axes[0].pie(resume_sizes, labels=resume_labels, autopct='%1.1f%%', startangle=90)
     axes[0].set_title("Resume Skills Distribution")
-
-    # Job Requirement Skills Pie Chart
     axes[1].pie(job_sizes, labels=job_labels, autopct='%1.1f%%', startangle=90)
     axes[1].set_title("Job Required Skills Distribution")
-
-    # Show the chart in Streamlit
     st.pyplot(fig)
-    
 
 # Streamlit UI
 st.title("📄 AI Resume Analyzer & Skill Enhancer")
 st.write("Upload your Resume and Job Description to analyze missing skills and get YouTube course recommendations!")
 
-# File Uploaders
 resume_file = st.file_uploader("📄 Upload Resume (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"])
 job_file = st.file_uploader("📄 Upload Job Description (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"])
 
@@ -130,35 +114,17 @@ if resume_file and job_file:
     st.subheader("📌 Job Description Summary")
     st.write(generate_summary(job_text))
     
-    # Button: Analyze Skills & Matching Score
-        if st.button("Analyze Skills & Matching Score"):
+    if st.button("Analyze Skills & Matching Score"):
         resume_skills = extract_skills(resume_text)
         job_skills = extract_skills(job_text)
         missing_skills = list(set(job_skills) - set(resume_skills))
 
-        # ✅ Store values in session state
         st.session_state.skills_analyzed = True
-        st.session_state.resume_skills = resume_skills  # ✅ Store resume skills
-        st.session_state.job_skills = job_skills  # ✅ Store job skills
+        st.session_state.resume_skills = resume_skills
+        st.session_state.job_skills = job_skills
         st.session_state.missing_skills = missing_skills
         st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
 
-        st.subheader("🔍 Extracted Skills")
-        st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills) if st.session_state.resume_skills else 'No skills extracted'}")
-        st.write(f"**Job Required Skills:** {', '.join(st.session_state.job_skills) if st.session_state.job_skills else 'No skills extracted'}")
-
-        st.subheader("📊 Resume Matching Score")
-        st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
-
-        st.subheader("⚠️ Missing Skills")
-        if missing_skills:
-            st.write(f"You are missing: {', '.join(missing_skills)}")
-        else:
-            st.success("You have all the required skills!")
-
-        plot_skill_distribution_pie(resume_skills, job_skills)
-
-    # Show skill analysis if analyzed
     if st.session_state.skills_analyzed:
         st.subheader("🔍 Extracted Skills")
         st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills)}")
@@ -175,20 +141,9 @@ if resume_file and job_file:
 
         plot_skill_distribution_pie(st.session_state.resume_skills, st.session_state.job_skills)
 
-        # Button: Show Recommended Courses
-        if st.session_state.get("skills_analyzed") and st.session_state.get("missing_skills"):
-            if st.button("📚 Get Recommended Courses"):
-                all_courses = []
-                for skill in st.session_state.missing_skills:
-                    all_courses.extend(fetch_youtube_courses(skill))
-                df = pd.DataFrame(all_courses)
-                st.table(df if not df.empty else "No courses found.")
-
-    # Show recommended courses if button is clicked
-    if st.session_state.show_courses:
-        st.subheader("📚 Recommended Courses")
-        all_courses = []
-        for skill in st.session_state.missing_skills:
-            all_courses.extend(fetch_youtube_courses(skill))
-        df = pd.DataFrame(all_courses)
-        st.table(df if not df.empty else "No courses found.")
+        if st.button("📚 Get Recommended Courses"):
+            all_courses = []
+            for skill in st.session_state.missing_skills:
+                all_courses.extend(fetch_youtube_courses(skill))
+            df = pd.DataFrame(all_courses)
+            st.table(df if not df.empty else "No courses found.")
