@@ -118,7 +118,8 @@ def plot_skill_comparison_pie(resume_skills, job_skills):
 
     # Show the chart
     plt.tight_layout()
-    plt.show()
+    st.pyplot(fig)
+    
 
 # Streamlit UI
 st.title("📄 AI Resume Analyzer & Skill Enhancer")
