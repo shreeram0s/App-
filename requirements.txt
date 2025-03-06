@@ -7,8 +7,7 @@ sentence-transformers==2.2.2
 google-api-python-client==2.53.0
 numpy==1.23.5
 matplotlib==3.6.2
-torch==torch==1.13.1+cpu
-# Specify the version of PyTorch you need
+torch==1.13.0  # Specify the version of PyTorch you need
 torchvision==0.14.0  # Specify the version of torchvision you need
 torchaudio==0.13.0  # Specify the version of torchaudio you need
 python-dotenv==0.21.0
