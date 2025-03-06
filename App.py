@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import requests
 import pandas as pd
 import pdfplumber
@@ -19,10 +19,8 @@ except OSError:
     download(model_name)
     nlp = spacy.load(model_name)
 
-
 # Load AI Model
 st_model = SentenceTransformer('all-MiniLM-L6-v2')
-
 
 # YouTube API Key (Replace with a new secured key)
 YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"
@@ -32,8 +30,11 @@ YOUTUBE_API_VERSION = "v3"
 # Initialize session state
 if "skills_analyzed" not in st.session_state:
     st.session_state.skills_analyzed = False
+    st.session_state.show_courses = False
     st.session_state.missing_skills = []
     st.session_state.matching_score = 0.0
+    st.session_state.resume_skills = []
+    st.session_state.job_skills = []
 
 # Function to fetch courses from YouTube
 def fetch_youtube_courses(skill):
@@ -61,7 +62,6 @@ def extract_text(uploaded_file):
         except Exception as e:
             st.error(f"Error reading file: {str(e)}")
     return "No text extracted."
-
 
 # Function to generate short descriptions
 def generate_summary(text):
@@ -130,33 +130,44 @@ if resume_file and job_file:
     st.subheader("📌 Job Description Summary")
     st.write(generate_summary(job_text))
     
+    # Button: Analyze Skills & Matching Score
     if st.button("Analyze Skills & Matching Score"):
         resume_skills = extract_skills(resume_text)
         job_skills = extract_skills(job_text)
         missing_skills = list(set(job_skills) - set(resume_skills))
         
+        # Store analysis results in session state
         st.session_state.skills_analyzed = True
         st.session_state.missing_skills = missing_skills
         st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
-        
+        st.session_state.resume_skills = resume_skills
+        st.session_state.job_skills = job_skills
+        st.session_state.show_courses = False  # Reset course visibility
+
+    # Show skill analysis if analyzed
+    if st.session_state.skills_analyzed:
         st.subheader("🔍 Extracted Skills")
-        st.write(f"**Resume Skills:** {', '.join(resume_skills)}")
-        st.write(f"**Job Required Skills:** {', '.join(job_skills)}")
-        
+        st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills)}")
+        st.write(f"**Job Required Skills:** {', '.join(st.session_state.job_skills)}")
+
         st.subheader("📊 Resume Matching Score")
         st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
-        
+
         st.subheader("⚠️ Missing Skills")
-        if missing_skills:
-            st.write(f"You are missing: {', '.join(missing_skills)}")
+        if st.session_state.missing_skills:
+            st.write(f"You are missing: {', '.join(st.session_state.missing_skills)}")
         else:
             st.success("You have all the required skills!")
-        
-        plot_skill_distribution_pie(resume_skills, job_skills)
 
+        plot_skill_distribution_pie(st.session_state.resume_skills, st.session_state.job_skills)
 
-if st.session_state.skills_analyzed and st.session_state.missing_skills:
-    if st.button("📚 Get Recommended Courses"):
+        # Button: Show Recommended Courses
+        if st.button("Show Recommended Courses"):
+            st.session_state.show_courses = True
+
+    # Show recommended courses if button is clicked
+    if st.session_state.show_courses:
+        st.subheader("📚 Recommended Courses")
         all_courses = []
         for skill in st.session_state.missing_skills:
             all_courses.extend(fetch_youtube_courses(skill))
