@@ -131,33 +131,32 @@ if resume_file and job_file:
     st.write(generate_summary(job_text))
     
     # Button: Analyze Skills & Matching Score
-    if st.button("Analyze Skills & Matching Score"):
-    resume_skills = extract_skills(resume_text)
-    job_skills = extract_skills(job_text)
-    missing_skills = list(set(job_skills) - set(resume_skills))
+        if st.button("Analyze Skills & Matching Score"):
+        resume_skills = extract_skills(resume_text)
+        job_skills = extract_skills(job_text)
+        missing_skills = list(set(job_skills) - set(resume_skills))
 
-    # ✅ Store values in session state
-    st.session_state.skills_analyzed = True
-    st.session_state.resume_skills = resume_skills  # ✅ Store resume skills
-    st.session_state.job_skills = job_skills  # ✅ Store job skills
-    st.session_state.missing_skills = missing_skills
-    st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
+        # ✅ Store values in session state
+        st.session_state.skills_analyzed = True
+        st.session_state.resume_skills = resume_skills  # ✅ Store resume skills
+        st.session_state.job_skills = job_skills  # ✅ Store job skills
+        st.session_state.missing_skills = missing_skills
+        st.session_state.matching_score = calculate_matching_score(resume_text, job_text)
 
-    st.subheader("🔍 Extracted Skills")
-    st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills) if st.session_state.resume_skills else 'No skills extracted'}")
-    st.write(f"**Job Required Skills:** {', '.join(st.session_state.job_skills) if st.session_state.job_skills else 'No skills extracted'}")
+        st.subheader("🔍 Extracted Skills")
+        st.write(f"**Resume Skills:** {', '.join(st.session_state.resume_skills) if st.session_state.resume_skills else 'No skills extracted'}")
+        st.write(f"**Job Required Skills:** {', '.join(st.session_state.job_skills) if st.session_state.job_skills else 'No skills extracted'}")
 
-    st.subheader("📊 Resume Matching Score")
-    st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
+        st.subheader("📊 Resume Matching Score")
+        st.write(f"Your resume matches **{st.session_state.matching_score}%** of the job requirements.")
 
-    st.subheader("⚠️ Missing Skills")
-    if missing_skills:
-        st.write(f"You are missing: {', '.join(missing_skills)}")
-    else:
-        st.success("You have all the required skills!")
+        st.subheader("⚠️ Missing Skills")
+        if missing_skills:
+            st.write(f"You are missing: {', '.join(missing_skills)}")
+        else:
+            st.success("You have all the required skills!")
 
-    plot_skill_distribution_pie(resume_skills, job_skills)
-
+        plot_skill_distribution_pie(resume_skills, job_skills)
 
     # Show skill analysis if analyzed
     if st.session_state.skills_analyzed:
@@ -184,8 +183,6 @@ if resume_file and job_file:
                     all_courses.extend(fetch_youtube_courses(skill))
                 df = pd.DataFrame(all_courses)
                 st.table(df if not df.empty else "No courses found.")
-
-
 
     # Show recommended courses if button is clicked
     if st.session_state.show_courses:
