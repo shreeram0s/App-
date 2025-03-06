@@ -8,12 +8,20 @@ import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import spacy
+from spacy.cli import download
 
-# Load AI Model
-st_model = SentenceTransformer('all-MiniLM-L6-v2')
+# Download the model if it's not already installed
+try:
+    nlp = spacy.load("en_core_web_md")
+except IOError:
+    download("en_core_web_md")
+    nlp = spacy.load("en_core_web_md")
 
 # Load spaCy model for NER
 nlp = spacy.load("en_core_web_md")
+
+# Load AI Model
+st_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # YouTube API Key (Replace with a new secured key)
 YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"
