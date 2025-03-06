@@ -8,12 +8,21 @@ import matplotlib.pyplot as plt
 from sentence_transformers import SentenceTransformer, util
 import googleapiclient.discovery
 import spacy
+from spacy.cli import download
+
+model_name = "en_core_web_md"
+
+try:
+    nlp = spacy.load(model_name)
+except OSError:
+    print(f"Downloading {model_name}...")
+    download(model_name)
+    nlp = spacy.load(model_name)
+
 
 # Load AI Model
 st_model = SentenceTransformer('all-MiniLM-L6-v2')
 
-# Load spaCy model for NER
-nlp = spacy.load("en_core_web_md")
 
 # YouTube API Key (Replace with a new secured key)
 YOUTUBE_API_KEY = "AIzaSyBoRgw0WE_KzTVNUvH8d4MiTo1zZ2SqKPI"
@@ -40,17 +49,19 @@ def fetch_youtube_courses(skill):
 # Function to extract text from files
 def extract_text(uploaded_file):
     if uploaded_file is not None:
-        ext = uploaded_file.name.split(".")[-1].lower()
-        if ext == "pdf":
-            with pdfplumber.open(uploaded_file) as pdf:
-                return "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
-        elif ext in ["docx", "doc"]:
-            return docx2txt.process(uploaded_file)
-        elif ext == "txt":
-            return uploaded_file.read().decode("utf-8")
-        else:
-            st.error("Unsupported file format! Please upload PDF, DOCX, or TXT.")
-    return ""
+        try:
+            ext = uploaded_file.name.split(".")[-1].lower()
+            if ext == "pdf":
+                with pdfplumber.open(uploaded_file) as pdf:
+                    return "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()]) or "No text extracted."
+            elif ext in ["docx", "doc"]:
+                return docx2txt.process(uploaded_file) or "No text extracted."
+            elif ext == "txt":
+                return uploaded_file.read().decode("utf-8") or "No text extracted."
+        except Exception as e:
+            st.error(f"Error reading file: {str(e)}")
+    return "No text extracted."
+
 
 # Function to generate short descriptions
 def generate_summary(text):
@@ -83,6 +94,7 @@ def plot_skill_comparison(resume_skills, job_skills):
     plt.xticks(rotation=45)
     plt.ylabel("Presence (1 = Present, 0 = Missing)")
     st.pyplot(plt)
+    plt.close()
 
 # Streamlit UI
 st.title("📄 AI Resume Analyzer & Skill Enhancer")
