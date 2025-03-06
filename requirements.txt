@@ -6,7 +6,10 @@ spacy
 pdfplumber
 docx2txt
 google-api-python-client
-numpy
+numpy==1.23.5
+torch==2.0.0
+torchvision==0.15.1
+torchaudio==2.0.0
 matplotlib
 python-dotenv
 requests
