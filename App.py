@@ -83,41 +83,32 @@ def calculate_matching_score(resume_text, job_text):
     return round(float(util.pytorch_cos_sim(embeddings[0], embeddings[1])[0]), 2) * 100
 
 # Function to plot skill comparison
-def plot_skill_comparison_pie(resume_skills, job_skills):
-
+def plot_skill_distribution_pie(resume_skills, job_skills):
     """
-    Plots two pie charts:
-    - One for skills found in the resume
-    - One for skills required in the job description
+    Plots two separate pie charts:
+    - One showing the distribution of skills in the resume.
+    - One showing the distribution of job-required skills.
     """
-    # Convert skill lists to sets for comparison
-    resume_skills_set = set(resume_skills)
-    job_skills_set = set(job_skills)
+    # Prepare data for Resume Skills pie chart
+    resume_labels = list(resume_skills) if resume_skills else ["No Skills Found"]
+    resume_sizes = [1] * len(resume_skills) if resume_skills else [1]
+    
+    # Prepare data for Job Skills pie chart
+    job_labels = list(job_skills) if job_skills else ["No Skills Found"]
+    job_sizes = [1] * len(job_skills) if job_skills else [1]
 
-    # Identify missing skills (in job description but not in resume)
-    missing_skills = job_skills_set - resume_skills_set
-    present_skills = resume_skills_set.intersection(job_skills_set)
-
-    # Prepare labels and counts for pie charts
-    resume_labels = ["Present Skills", "Missing Skills"]
-    resume_sizes = [len(present_skills), len(missing_skills)]
-
-    job_labels = ["Required Skills"]
-    job_sizes = [len(job_skills_set)]
-
-    # Plot the pie charts
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    # Plot pie charts
+    fig, axes = plt.subplots(1, 2, figsize=(14, 7))
 
     # Resume Skills Pie Chart
-    axes[0].pie(resume_sizes, labels=resume_labels, autopct='%1.1f%%', colors=['green', 'red'], startangle=90)
-    axes[0].set_title("Skills in Resume")
+    axes[0].pie(resume_sizes, labels=resume_labels, autopct='%1.1f%%', startangle=90)
+    axes[0].set_title("Resume Skills Distribution")
 
-    # Job Requirement Pie Chart
-    axes[1].pie(job_sizes, labels=job_labels, autopct='%1.1f%%', colors=['blue'], startangle=90)
-    axes[1].set_title("Skills Required for Job")
+    # Job Requirement Skills Pie Chart
+    axes[1].pie(job_sizes, labels=job_labels, autopct='%1.1f%%', startangle=90)
+    axes[1].set_title("Job Required Skills Distribution")
 
-    # Show the chart
-    plt.tight_layout()
+    # Show the chart in Streamlit
     st.pyplot(fig)
     
 
