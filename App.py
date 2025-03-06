@@ -152,7 +152,8 @@ if resume_file and job_file:
         else:
             st.success("You have all the required skills!")
         
-        plot_skill_comparison_pie(resume_skills, job_skills)
+        plot_skill_distribution_pie(resume_skills, job_skills)
+
 
 if st.session_state.skills_analyzed and st.session_state.missing_skills:
     if st.button("📚 Get Recommended Courses"):
