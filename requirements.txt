@@ -2,14 +2,14 @@ streamlit
 transformers
 sentence-transformers
 huggingface-hub
-spacy==3.5.0
+spacy
 pdfplumber
 docx2txt
 google-api-python-client
-numpy==1.23.5
-torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.1
+numpy<2.0.0  # Downgrade NumPy to a version below 2.0
+torch==2.0.0  # Use a compatible version of torch
+torchvision==0.15.1  # Use a compatible version of torchvision
+torchaudio==2.0.0  # Use a compatible version of torchaudio
 matplotlib
 python-dotenv
 requests
