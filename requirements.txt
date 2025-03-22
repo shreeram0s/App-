@@ -8,7 +8,7 @@ docx2txt
 google-api-python-client
 numpy<2.0.0  # Downgrade NumPy to a version below 2.0
 torch==2.0.0  # Use a compatible version of torch
-torchvision==0.15.1  # Use a compatible version of torchvision
+torchvision==0.15.0  # Use a compatible version of torchvision
 torchaudio==2.0.0  # Use a compatible version of torchaudio
 matplotlib
 python-dotenv
