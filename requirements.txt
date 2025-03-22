@@ -6,10 +6,8 @@ spacy
 pdfplumber
 docx2txt
 google-api-python-client
-numpy<2.0.0  # Downgrade NumPy to a version below 2.0
-torch==2.0.0  # Use a compatible version of torch
-torchvision==0.15.0  # Use a compatible version of torchvision
-torchaudio==2.0.0  # Use a compatible version of torchaudio
+numpy<2.0  # Downgrade NumPy to a version below 2.0
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu  # Install PyTorch (change to CUDA version if needed)
 matplotlib
 python-dotenv
 requests
@@ -20,5 +18,6 @@ beautifulsoup4
 unidecode
 spacy-lookups-data
 thinc==8.1.10
-# Install Spacy model manually if needed:
-https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
+
+# Manually install the Spacy model if needed:
+# pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
