@@ -2,14 +2,14 @@ streamlit
 transformers
 sentence-transformers
 huggingface-hub
-spacy
+spacy==3.5.0
 pdfplumber
 docx2txt
 google-api-python-client
-numpy
-torch
-torchvision
-torchaudio
+numpy==1.23.5
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.1
 matplotlib
 python-dotenv
 requests
@@ -19,5 +19,6 @@ scikit-learn
 beautifulsoup4
 unidecode
 spacy-lookups-data
+thinc==8.1.10
 # Install Spacy model manually if needed:
 https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.5.0/en_core_web_md-3.5.0.tar.gz
